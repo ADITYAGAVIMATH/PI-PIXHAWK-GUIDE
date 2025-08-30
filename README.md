@@ -242,3 +242,7 @@ Here,
  '127.0.0.1' Your PC's IP Adress, Obtained by typing 'ipconfig' in command prompt
  
  '14552' is the port to which you need to connect to mission planner using UDP
+
+ ---
+## 📹 Bonus Guides
+* [**Live Camera Streaming Guide**](./CAMERA_STREAM.md) ➡️
