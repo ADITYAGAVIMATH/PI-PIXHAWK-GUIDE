@@ -245,4 +245,4 @@ Here,
 
  ---
 ## 📹 Bonus Guides
-* [**Live Camera Streaming Guide**](./CAMERA_STREAM.md) ➡️
+* [**Live Camera Streaming Guide**][(./CAMERA_STREAM.md)](https://github.com/ADITYAGAVIMATH/PI-PIXHAWK-GUIDE/blob/main/Camera_stream.md) ➡️
