@@ -233,3 +233,12 @@ By default, the Raspberry Pi uses its powerful hardware serial port for the onbo
 
 
 ## This makes sure that you are connected to pixhawk and responding
+
+Type the following if you want telemetry data to be displayed in mission planner
+
+mavproxy.py --master=/dev/serial0 --baudrate 921600 --out udp:127.0.0.1:14552
+
+Here,
+ '127.0.0.1' Your PC's IP Adress, Obtained by typing 'ipconfig' in command prompt
+ 
+ '14552' is the port to which you need to connect to mission planner using UDP
