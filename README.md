@@ -1,4 +1,13 @@
-# Raspberry Pi Headless Setup Guide (VNC & SSH)
+# Raspberry Pi & Pixhawk Integration Guide
+
+This project provides a complete guide for setting up a Raspberry Pi to communicate with a Pixhawk flight controller, including a bonus guide for live camera streaming.
+
+---
+
+<details>
+  <summary><h2>▶️ Raspberry Pi 4 Setup Guide</h2></summary>
+  
+  # Raspberry Pi Headless Setup Guide (VNC & SSH)
 
 This guide provides a complete workflow for setting up a Raspberry Pi without needing a dedicated monitor, keyboard, or mouse (a "headless" setup). We'll use a standard PC to prepare the microSD card, connect to the Pi via SSH using **PuTTY**, and finally access the full graphical desktop using **VNC Viewer**.
 
@@ -246,3 +255,21 @@ Here,
  ---
 ## 📹 Bonus Guides
 * [**Live Camera Streaming Guide**][(./CAMERA_STREAM.md)](https://github.com/ADITYAGAVIMATH/PI-PIXHAWK-GUIDE/blob/main/Camera_stream.md) ➡️
+
+  
+  </details>
+
+<details>
+  <summary><h2>▶️ Raspberry Pi 5 Setup Guide</h2></summary>
+  
+  ---
+
+  ### 📝 Coming Soon!
+  
+  This section will contain setup instructions specifically tailored for the Raspberry Pi 5. While many steps are similar, there are a few key differences to be aware of:
+  
+  * **Camera Setup:** The Raspberry Pi 5 no longer has a "Legacy Camera" option in `raspi-config`. The `picamera2` library, which is used in the camera streaming guide, is the correct and modern way to use the camera, so that part of the guide is already compatible.
+  
+  * **Serial Port:** The method of enabling the UART by disabling Bluetooth is still the same, but you should always double-check the serial device names and GPIO pin functions in the official Raspberry Pi 5 documentation.
+
+</details>
