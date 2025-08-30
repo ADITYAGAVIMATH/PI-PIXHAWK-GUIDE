@@ -6,10 +6,16 @@ This guide provides a complete workflow for setting up a Raspberry Pi without ne
 
 ---
 ## 📋 Table of Contents
-1.  [PC Software Installation](#1-pc-software-installation)
-2.  [Preparing the microSD Card with Raspberry Pi Imager](#2-preparing-the-microsd-card-with-raspberry-pi-imager)
-3.  [First Boot & Connecting with PuTTY (SSH)](#3-first-boot--connecting-with-putty-ssh)
-4.  [Enabling VNC for Full Desktop Access](#4-enabling-vnc-for-full-desktop-access)
+1.  [PC Software Installation](#1--pc-software-installation)
+2.  [Preparing the microSD Card with Raspberry Pi Imager](#2--preparing-the-microsd-card-with-raspberry-pi-imager)
+3.  [First Boot & Connecting with PuTTY (SSH)](#3--first-boot--connecting-with-putty-ssh)
+4.  [Enabling VNC for Full Desktop Access](#4--enabling-vnc-for-full-desktop-access)
+5.  [Install Software & Configure Hardware](#-step-2-install-software--configure-hardware)
+    * [Software Installation](#-software-installation)
+    * [Configure the Hardware Serial Port](#️-configure-the-hardware-serial-port)
+    * [Configure the Pixhawk](#configure-the-pixhawk)
+    * [Heartbeat from Pixhawk](#heartbeat-from-pixhawk)
+6.  [Confirming the Connection](#this-makes-sure-that-you-are-connected-to-pixhawk-and-responding)
 
 ---
 
