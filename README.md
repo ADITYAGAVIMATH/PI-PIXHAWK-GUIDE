@@ -23,7 +23,7 @@ Before you begin, you'll need to install three essential tools on your computer.
 
 * ### PuTTY (for SSH)
     PuTTY is a lightweight and powerful SSH client that will give you command-line access to your Raspberry Pi over the network.
-    * **Download here:** [PuTTY](https://www.putty.org/)
+    * **Download here:** [PuTTY][(https://www.putty.org/)](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
 
 * ### RealVNC Viewer
     This tool will allow you to see and control your Raspberry Pi's full graphical desktop from your computer.
