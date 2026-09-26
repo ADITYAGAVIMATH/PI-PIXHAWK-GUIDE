@@ -64,7 +64,7 @@ This script uses the `picamera2` library to capture frames, `OpenCV` to process 
             frame = picam2.capture_array()
 
             # Fix potential purple tint (convert from RGB to BGR for OpenCV)
-            frame = cv2.cvtColor(frame, cv.COLOR_RGB2BGR)
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
             # Encode the frame as a JPEG image
             ret, buffer = cv2.imencode('.jpg', frame)

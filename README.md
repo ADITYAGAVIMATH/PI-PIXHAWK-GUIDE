@@ -1,275 +1,300 @@
-# Raspberry Pi & Pixhawk Integration Guide
+# Raspberry Pi and Pixhawk Integration Guide
+## Companion Computer Setup for Autonomous Drone Control
 
-This project provides a complete guide for setting up a Raspberry Pi to communicate with a Pixhawk flight controller, including a bonus guide for live camera streaming.
-
----
-
-<details>
-  <summary><h2>▶️ Raspberry Pi 4 Setup Guide</h2></summary>
-  
-  # Raspberry Pi Headless Setup Guide (VNC & SSH)
-
-This guide provides a complete workflow for setting up a Raspberry Pi without needing a dedicated monitor, keyboard, or mouse (a "headless" setup). We'll use a standard PC to prepare the microSD card, connect to the Pi via SSH using **PuTTY**, and finally access the full graphical desktop using **VNC Viewer**.
-
-
-
----
-## 📋 Table of Contents
-1.  [PC Software Installation](#1--pc-software-installation)
-2.  [Preparing the microSD Card with Raspberry Pi Imager](#2--preparing-the-microsd-card-with-raspberry-pi-imager)
-3.  [First Boot & Connecting with PuTTY (SSH)](#3--first-boot--connecting-with-putty-ssh)
-4.  [Enabling VNC for Full Desktop Access](#4--enabling-vnc-for-full-desktop-access)
-5.  [Install Software & Configure Hardware](#-step-2-install-software--configure-hardware)
-    * [Software Installation](#-software-installation)
-    * [Configure the Hardware Serial Port](#️-configure-the-hardware-serial-port)
-    * [Configure the Pixhawk](#configure-the-pixhawk)
-    * [Heartbeat from Pixhawk](#heartbeat-from-pixhawk)
-6.  [Confirming the Connection](#this-makes-sure-that-you-are-connected-to-pixhawk-and-responding)
+[![Raspberry Pi 4](https://img.shields.io/badge/Raspberry%20Pi-4B-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white)](https://www.raspberrypi.com)
+[![Raspberry Pi 5](https://img.shields.io/badge/Raspberry%20Pi-5-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white)](https://www.raspberrypi.com)
+[![Autopilot](https://img.shields.io/badge/Autopilot-Pixhawk%20/%20ArduPilot-orange?style=for-the-badge)](https://ardupilot.org)
+[![Protocol](https://img.shields.io/badge/Protocol-MAVLink%202.0-blue?style=for-the-badge)](https://mavlink.io)
+[![Python](https://img.shields.io/badge/Python-3.11%20VirtualEnv-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Streaming](https://img.shields.io/badge/Streaming-rpicam--apps-darkgreen?style=for-the-badge)](https://www.raspberrypi.com/documentation/computers/camera_software.html)
 
 ---
 
-## 1. 🖥️ PC Software Installation
-
-Before you begin, you'll need to install three essential tools on your computer.
-
-* ### Raspberry Pi Imager
-    This is the official tool for writing Raspberry Pi OS to your microSD card. It also includes critical settings for a headless setup.
-    * **Download here:** [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
-
-* ### PuTTY (for SSH)
-    PuTTY is a lightweight and powerful SSH client that will give you command-line access to your Raspberry Pi over the network.
-    * **Download here:** [PuTTY][(https://www.putty.org/)](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
-
-* ### RealVNC Viewer
-    This tool will allow you to see and control your Raspberry Pi's full graphical desktop from your computer.
-    * **Download here:** [RealVNC Viewer](https://www.realvnc.com/en/connect/download/viewer/)
-
----
-
-## 2. 💾 Preparing the microSD Card with Raspberry Pi Imager
-
-1.  **Insert your microSD card** into your computer.
-2.  **Open Raspberry Pi Imager.**
-3.  **Choose your settings:**
-    * **Raspberry Pi Device:** Select your model (e.g., Raspberry Pi 4).
-    * **Operating System:** Click `CHOOSE OS` and select **Raspberry Pi OS (32-bit)** or **(64-bit)**. The standard version with a desktop is recommended.
-    * **Storage:** Click `CHOOSE STORAGE` and select your microSD card.
-
-4.  **Configure Advanced Options (Crucial for Headless Setup):**
-    * Before writing, click the **Gear icon ⚙️** to open the Advanced Options menu. 
-    * Check the box for **Enable SSH** and select "Use password authentication".
-    * Check the box for **Set username and password**. Enter a username and a strong password that you will remember.
-    * Check the box for **Configure wireless LAN**. Enter your WiFi network's **SSID** (name) and **password**.
-    * Click **SAVE**.
-
-5.  **Write the OS:**
-    * Click the **WRITE** button. This will erase the microSD card and install Raspberry Pi OS with your settings. This process can take several minutes.
+## Table of Contents
+- [1. System Overview](#1-system-overview)
+- [2. Hardware Specifications and Wiring Matrix](#2-hardware-specifications-and-wiring-matrix)
+- [3. Raspberry Pi 5 Setup Guide](#3-raspberry-pi-5-setup-guide)
+  - [3.1 Headless OS Flashing and Network Preparation](#31-headless-os-flashing-and-network-preparation)
+  - [3.2 SSH and Remote Desktop Access (Wayland / WayVNC)](#32-ssh-and-remote-desktop-access-wayland--wayvnc)
+  - [3.3 Hardware UART Configuration on Pi 5 (RP1 Architecture)](#33-hardware-uart-configuration-on-pi-5-rp1-architecture)
+  - [3.4 Python Environment and MAVLink Software Installation](#34-python-environment-and-mavlink-software-installation)
+  - [3.5 Autopilot (Pixhawk) Parameter Configuration](#35-autopilot-pixhawk-parameter-configuration)
+  - [3.6 MAVLink Communication and Heartbeat Verification](#36-mavlink-communication-and-heartbeat-verification)
+  - [3.7 Low-Latency Video Streaming (rpicam-vid)](#37-low-latency-video-streaming-rpicam-vid)
+- [4. Raspberry Pi 4 Setup Guide](#4-raspberry-pi-4-setup-guide)
+- [5. Troubleshooting Reference](#5-troubleshooting-reference)
+- [6. Additional Resources](#6-additional-resources)
 
 ---
 
-## 3. 🔌 First Boot & Connecting with PuTTY (SSH)
+## 1. System Overview
 
-Once the write is complete, you can start your Pi and connect to it.
+This repository provides a step-by-step technical guide for interfacing a Raspberry Pi (Raspberry Pi 4 and Raspberry Pi 5) with a Pixhawk flight controller running ArduPilot or PX4 firmware. The Raspberry Pi functions as an onboard companion computer for offboard autonomous control, telemetry routing, computer vision, and video streaming to Ground Control Stations (Mission Planner or QGroundControl).
 
-1.  **Eject the microSD card** from your computer and insert it into your Raspberry Pi.
-2.  **Power on your Raspberry Pi.** Wait a minute or two for it to boot up and connect to your WiFi network.
-3.  **Find your Pi's IP Address.** . It will likely be named `raspberrypi`.
-4.  **Open PuTTY.**
-    * In the **Host Name (or IP address)** field, enter the IP address you found.
-    * Ensure the **Port** is `22` and the **Connection type** is `SSH`.
-    * Click **Open**.
-
-5.  **Log In:**
-    * A terminal window will open. You may see a security alert on the first connection; click **Accept**.
-    * When prompted for "login as:", enter the **username** you created in the Pi Imager.
-    * When prompted for the password, enter the **password** you set.
-    
-    *   **Note: You will not see the cursor move as you type the password.** This is normal. Press `Enter` when done.
-
-> **Success!** You should now be logged into your Raspberry Pi's command line.
+```mermaid
+flowchart LR
+    GCS["Ground Control Station (PC)"] <--> |WiFi / UDP / RTSP| PI["Raspberry Pi 5 (Companion Computer)"]
+    PI <--> |UART / MAVLink /dev/ttyAMA0| PX["Pixhawk Autopilot (TELEM2)"]
+    CAM["CSI / USB Camera"] --> |rpicam-vid / Flask| PI
+```
 
 ---
 
-## 4. 🖱️ Enabling VNC for Full Desktop Access
+## 2. Hardware Specifications and Wiring Matrix
 
-The final step is to enable the VNC server so you can access the graphical desktop. You'll do this from inside your PuTTY (SSH) session.
+### Physical Connection (GPIO to Pixhawk TELEM2)
 
-1.  **Run the Raspberry Pi Configuration Tool** by typing the following command and pressing `Enter`:
-    ```bash
-    sudo raspi-config
-    ```
+| Raspberry Pi Pin | Pin Function | Pixhawk TELEM2 Pin | Pin Description |
+| :--- | :--- | :--- | :--- |
+| **Pin 6** | Ground (GND) | **Pin 6** | Ground (GND) |
+| **Pin 8** | GPIO 14 (TXD0) | **Pin 3** | RX (Telemetry Receive) |
+| **Pin 10** | GPIO 15 (RXD0) | **Pin 2** | TX (Telemetry Transmit) |
 
-2.  **Enable VNC:**
-    * Using your arrow keys, navigate to **`Interface Options`** and press `Enter`.
-    * Navigate down to **`VNC`** and press `Enter`.
-    * Select **`<Yes>`** to enable the VNC Server and press `Enter`.
-   add below two lines at bottom of file sudo nano /boot/config.txt ,if VNC not working
+> **Power Notice**: Do not power the Raspberry Pi 5 from the 5V pin of the Pixhawk TELEM port. The Raspberry Pi 5 requires a dedicated 5V / 5A power source connected through USB-C or a regulated step-down BEC module.
+
+---
+
+## 3. Raspberry Pi 5 Setup Guide
+
+### 3.1 Headless OS Flashing and Network Preparation
+1. Insert your microSD card into your computer.
+2. Open **Raspberry Pi Imager**:
+   - **Device**: Select `Raspberry Pi 5`.
+   - **Operating System**: Select `Raspberry Pi OS (64-bit)` (Debian 12 Bookworm).
+   - **Storage**: Select your microSD card.
+3. Click **Next** and select **Edit Settings**:
+   - **General**: Set Hostname (`raspberrypi-drone`), Username, and Password.
+   - **Wireless LAN**: Enter your WiFi network SSID and Password.
+   - **Services**: Check **Enable SSH** and choose *Use password authentication*.
+4. Click **Save** and write the operating system.
+
+---
+
+### 3.2 SSH and Remote Desktop Access (Wayland / WayVNC)
+
+#### Connect via SSH
+Insert the microSD card into the Raspberry Pi 5, power it on, and connect from your PC terminal or PuTTY:
+
+```bash
+ssh <username>@<RASPBERRY_PI_IP>
+```
+
+#### Remote Desktop Access (WayVNC)
+Raspberry Pi OS Bookworm on Pi 5 uses the **Wayland** display server by default.
+
+* **Method 1: Native WayVNC (Default)**:
+  1. Enable VNC:
+     ```bash
+     sudo raspi-config
+     ```
+     Navigate to: `Interface Options` → `VNC` → Select `Yes`.
+  2. Connect using **TigerVNC Viewer** or **RealVNC Viewer** (v7.x or higher) to `<RASPBERRY_PI_IP>:5900`.
+
+* **Method 2: Switch to X11 (For Legacy VNC Clients)**:
+  1. Open configuration:
+     ```bash
+     sudo raspi-config
+     ```
+  2. Navigate to: `Advanced Options` → `Wayland` → Select `X11 (Openbox)`.
+  3. Reboot:
+     ```bash
+     sudo reboot
+     ```
+
+---
+
+### 3.3 Hardware UART Configuration on Pi 5 (RP1 Architecture)
+
+On Raspberry Pi 5, peripheral I/O is managed by the RP1 chip. Firmware boot parameters are stored in `/boot/firmware/config.txt`.
+
+#### Step 1: Enable Hardware Serial Port
+1. Open the configuration tool:
    ```bash
-   hdmi_force_hotplug=1
-   hdmi_group=2
-   hdmi_mode=9
+   sudo raspi-config
    ```
-4.  **Set Screen Resolution (Important!):**
-    * A VNC server needs a screen resolution to function correctly without a monitor attached.
-    * Back in the main menu, navigate to **`Display Options`** and press `Enter`.
-    * Navigate to **`Resolution`** and press `Enter`.
-    * Choose a suitable resolution like **`1280x720`** and press `Enter`.
+2. Navigate to: `Interface Options` → `Serial Port`.
+3. Set **Login Shell over Serial**: `No`.
+4. Set **Serial Port Hardware**: `Yes`.
 
-5.  **Finish and Reboot:**
-    * Press the right arrow key twice to select **`<Finish>`** in the main menu and press `Enter`.
-    * You will be asked if you want to reboot. Select **`<Yes>`**. Your PuTTY session will disconnect as the Pi reboots.
+#### Step 2: Configure `/boot/firmware/config.txt`
+```bash
+sudo nano /boot/firmware/config.txt
+```
 
-6.  **Connect with RealVNC Viewer:**
-    * Wait a minute for the Pi to restart.
-    * Open **RealVNC Viewer** on your computer.
-    * In the address bar at the top, type your Pi's **IP address** and press `Enter`.
-    * A connection window will appear. Enter the **username** and **password** for your Pi.
-    * Click **OK**.
-  
-      <img width="1920" height="1080" alt="167396310-6daf60e3-e97d-4c53-97b8-2ebb3c1907a5" src="https://github.com/user-attachments/assets/9f44503f-d2c7-4ed0-9b51-aa15b580beaa" />
+Add the following lines at the end of the file:
 
+```ini
+# Enable primary UART on GPIO 14/15 for Pixhawk Telemetry
+enable_uart=1
+dtoverlay=uart0
+```
 
-You should now see and have full control of your Raspberry Pi's desktop, all without a monitor connected to it!
+Save and exit (`Ctrl + O`, `Enter`, `Ctrl + X`).
 
-## 🚀 Step 2: Install Software & Configure Hardware
+#### Step 3: Disable Serial Console Service
+```bash
+sudo systemctl stop serial-getty@ttyAMA0.service
+sudo systemctl disable serial-getty@ttyAMA0.service
+sudo reboot
+```
 
-Now that your Raspberry Pi is running, the next step is to install the specific software needed for your drone project and configure the Pi's hardware to communicate with the Pixhawk.
-
----
-### 📦 Software Installation
-
-These commands will update your system and install the necessary Python libraries for your project. You can run them in a **PuTTY (SSH)** session or in a **Terminal** window on the VNC desktop.
-
-1.  **Update your package list** to ensure you're getting the latest software versions.
-    ```bash
-    sudo apt-get update
-    ```
-
-2.  **Install the Python libraries** with a single command. This will fetch all the required packages for drone communication and control.
-    ```bash
-    sudo pip3 install pyserial
-    sudo pip3 install dronekit
-    sudo pip3 install geopy
-    sudo pip3 install MAVProxy
-    sudo pip3 install future
-    ```
+> The primary GPIO UART on Raspberry Pi 5 corresponds to `/dev/ttyAMA0` (aliased as `/dev/serial0`).
 
 ---
-### ⚙️ Configure the Hardware Serial Port
 
-By default, the Raspberry Pi uses its powerful hardware serial port for the onboard Bluetooth. We need to disable Bluetooth and enable the port for the GPIO pins so you can connect it to your Pixhawk.
+### 3.4 Python Environment and MAVLink Software Installation
 
-#### A. Edit the Boot Configuration File
+Debian 12 Bookworm enforces PEP 668 to prevent system Python package conflicts. Use a dedicated Python virtual environment:
 
-1.  Open the boot configuration file using the `nano` text editor.
-    ```bash
-    sudo nano /boot/config.txt
-    ```
+#### Step 1: Install System Dependencies
+```bash
+sudo apt update
+sudo apt install -y python3-pip python3-venv python3-dev build-essential libxml2-dev libxslt-dev
+```
 
-2.  Scroll to the **very bottom** of the file and add these two lines:
-    ```ini
-    enable_uart=1
-    dtoverlay=disable-bt
-    ```
-    * `enable_uart=1`: This **enables the UART** (serial communication) hardware.
-    * `dtoverlay=disable-bt`: This **disables the Bluetooth module**, which is crucial to free up the high-performance serial pins for your Pixhawk.
+#### Step 2: Create and Activate Virtual Environment
+```bash
+mkdir -p ~/drone_ws && cd ~/drone_ws
+python3 -m venv venv --system-site-packages
+source ~/drone_ws/venv/bin/activate
+```
 
-3.  Save the file and exit by pressing `Ctrl+X`, then `Y`, and then `Enter`.
+#### Step 3: Install MAVLink Packages
+```bash
+pip install --upgrade pip
+pip install pymavlink mavproxy dronekit
+```
 
-#### B. Use the Raspberry Pi Configuration Tool
+> To automatically load the virtual environment on every terminal session:
+> ```bash
+> echo "source ~/drone_ws/venv/bin/activate" >> ~/.bashrc
+> ```
 
-  This tool will finalize the serial port setup.
+---
 
-1.  Run the configuration tool:
-    ```bash
-    sudo raspi-config
-    ```
-![download](https://github.com/user-attachments/assets/0ed49823-eeb7-480c-83c5-187e908c5dbc)
+### 3.5 Autopilot (Pixhawk) Parameter Configuration
 
+Connect the Pixhawk to **Mission Planner** or **QGroundControl** via USB, open the Full Parameter List, and set the following for the TELEM2 port:
 
-2.  Using your arrow keys, navigate to **`Interface Options`** and press `Enter`.
+| Parameter | Recommended Value | Purpose |
+| :--- | :--- | :--- |
+| `SERIAL2_PROTOCOL` | `2` | MAVLink 2 protocol |
+| `SERIAL2_BAUD` | `57` (57600 baud) or `921` (921600 baud) | UART transmission speed |
+| `BRD_SER2_RTSCTS` | `0` | Disable hardware flow control for 3-wire wiring |
 
-3.  Navigate down to **`Serial Port`** and press `Enter`.
+*Write parameters to the board and power cycle the Pixhawk.*
 
-4.  You will be asked two questions:
-    * "Would you like a login shell to be accessible over serial?" -> Select **`<No>`**.
-    * "Would you like the serial port hardware to be enabled?" -> Select **`<Yes>`**.
+---
 
-5.  Navigate to **`<Finish>`** and press `Enter`. When prompted, select **`<Yes>`** to **reboot** your Raspberry Pi and apply all the changes.
+### 3.6 MAVLink Communication and Heartbeat Verification
 
-6.  ### **Configure the Pixhawk**
+#### Step 1: Launch MAVProxy Bridge
+Forward MAVLink telemetry from the serial port to local scripts and your Ground Control Station:
 
-   ![AEP_7](https://github.com/user-attachments/assets/1deecb7a-8f3a-4dc1-85fe-2afd1fce74d7)
+```bash
+mavproxy.py --master=/dev/ttyAMA0 --baudrate 57600 --out=127.0.0.1:14550 --out=<GCS_IP_ADDRESS>:14550
+```
 
-    
-    
-    
-  Now, you need to tell the Pixhawk to send MAVLink data out of the telemetry/usb port you just connected. You'll be doing this using a ground control station       software called Mission Planner.
+#### Step 2: Python Script to Verify Heartbeat
+Create a script named `check_heartbeat.py`:
 
-   i) Connect your Pixhawk to your computer via USB.
+```python
+from pymavlink import mavutil
+import time
 
-  ii) Open Mission Planner and connect to the Pixhawk.
+# Connect to Pixhawk on primary UART
+print("Connecting to Pixhawk on /dev/ttyAMA0...")
+connection = mavutil.mavlink_connection('/dev/ttyAMA0', baud=57600)
 
-  iii) Go to the CONFIG → Full Parameter List screen.
+# Wait for the first heartbeat packet
+print("Waiting for heartbeat...")
+connection.wait_heartbeat()
+print(f"Heartbeat received from System ID: {connection.target_system}, Component ID: {connection.target_component}")
 
-  iv) Find and set the following parameters.
-    
-    `SERIAL2_PROTOCOL = 2`
-    
-    `SERIAL2_BAUD = 921`
-    
-    `LOG_BACKEND_TYPE = 3`
+# Read vehicle status
+while True:
+    msg = connection.recv_match(type='HEARTBEAT', blocking=True)
+    if msg:
+        mode = mavutil.mode_string_v10(msg)
+        is_armed = msg.base_mode & mavutil.mavlink.MAV_MODE_FLAG_SAFETY_ARMED
+        print(f"Mode: {mode} | Armed: {'YES' if is_armed else 'NO'}")
+    time.sleep(1)
+```
 
-   
-7.  ### Heartbeat from pixhawk
-    Now type the following to get the telemetry data of pixhawk,
-    ```bash
-    mavproxy.py --master=/dev/serial0 --baudrate 921600   #for serial
-    ```
-       (or)
-    
-    ```bash
-    mavproxy.py --master=/dev/ttyAMA0 --baudrate 921600   #for uart
-    ```
-       (or)                       
-    ```bash
-    mavproxy.py --master=/dev/ttyACM0 --baudrate 115200   #for usb
-    ```
- 
-    ## The output must something be like
+Run the script:
+```bash
+python check_heartbeat.py
+```
 
-     <img width="885" height="635" alt="image" src="https://github.com/user-attachments/assets/01079a69-06b7-4cf1-aae3-a7ca12f5cc92" />
+---
 
+### 3.7 Low-Latency Video Streaming (rpicam-vid)
 
-## This makes sure that you are connected to pixhawk and responding
+On Raspberry Pi 5, use `rpicam-apps` for camera operations:
 
-Type the following if you want telemetry data to be displayed in mission planner
+#### Step 1: Install Camera Dependencies
+```bash
+sudo apt install -y rpicam-apps gstreamer1.0-tools gstreamer1.0-plugins-good gstreamer1.0-plugins-bad
+```
 
-mavproxy.py --master=/dev/serial0 --baudrate 921600 --out udp:127.0.0.1:14552
+#### Step 2: Test Camera Interface
+```bash
+rpicam-hello -t 5000
+```
 
-Here,
- '127.0.0.1' Your PC's IP Adress, Obtained by typing 'ipconfig' in command prompt
- 
- '14552' is the port to which you need to connect to mission planner using UDP
+#### Step 3: Stream Video over UDP to Ground Control Station
+```bash
+rpicam-vid -t 0 --inline --width 1280 --height 720 --framerate 30 --codec h264 -o udp://<GCS_IP_ADDRESS>:5600
+```
 
- ---
-## 📹 Bonus Guides
-* [**Live Camera Streaming Guide**][(./CAMERA_STREAM.md)](https://github.com/ADITYAGAVIMATH/PI-PIXHAWK-GUIDE/blob/main/Camera_stream.md) ➡️
+*In QGroundControl: Settings → Video → Source = `UDP h.264 Video Stream`, Port = `5600`.*
 
-  
-  </details>
+---
+
+## 4. Raspberry Pi 4 Setup Guide
 
 <details>
-  <summary><h2>▶️ Raspberry Pi 5 Setup Guide</h2></summary>
-  
-  ---
+<summary><strong>Click to expand Raspberry Pi 4 instructions</strong></summary>
 
-  ### 📝 Coming Soon!
-  
-  This section will contain setup instructions specifically tailored for the Raspberry Pi 5. While many steps are similar, there are a few key differences to be aware of:
-  
-  * **Camera Setup:** The Raspberry Pi 5 no longer has a "Legacy Camera" option in `raspi-config`. The `picamera2` library, which is used in the camera streaming guide, is the correct and modern way to use the camera, so that part of the guide is already compatible.
-  
-  * **Serial Port:** The method of enabling the UART by disabling Bluetooth is still the same, but you should always double-check the serial device names and GPIO pin functions in the official Raspberry Pi 5 documentation.
+### Key Pi 4 Differences:
+1. **Config File**: Located at `/boot/config.txt`.
+2. **Serial Port**: Uses `/dev/serial0` (or `/dev/ttyS0` / `/dev/ttyAMA0`).
+3. **Display Server**: Uses standard X11 with native RealVNC support.
+
+### UART Configuration for Pi 4:
+```bash
+sudo nano /boot/config.txt
+```
+Append:
+```ini
+enable_uart=1
+dtoverlay=disable-bt
+```
+Disable Bluetooth modem service:
+```bash
+sudo systemctl disable hciuart
+```
+Launch MAVProxy:
+```bash
+mavproxy.py --master=/dev/serial0 --baudrate 57600 --out=127.0.0.1:14550 --out=<GCS_IP_ADDRESS>:14550
+```
 
 </details>
+
+---
+
+## 5. Troubleshooting Reference
+
+| Issue / Symptom | Root Cause | Resolution |
+| :--- | :--- | :--- |
+| `Permission denied: '/dev/ttyAMA0'` | User account lacks serial permissions | Run `sudo usermod -a -G dialout $USER` and log in again |
+| `error: externally-managed-environment` | Debian 12 PEP 668 restriction | Use Python virtual environment (`python3 -m venv ~/drone_ws/venv`) |
+| No heartbeat received in MAVProxy | RX/TX wires swapped or mismatched baud rate | Verify Pin 8 (TX) to Pixhawk RX, Pin 10 (RX) to Pixhawk TX, and match `SERIAL2_BAUD` |
+| VNC shows black screen on Pi 5 | Wayland authentication incompatibility | Connect with TigerVNC or switch display backend to X11 in `raspi-config` |
+
+---
+
+## 6. Additional Resources
+* [Camera Streaming Setup Guide](Camera_stream.md)
+* [ArduPilot Companion Computer Documentation](https://ardupilot.org/dev/docs/companion-computers.html)
+* [Raspberry Pi Documentation](https://www.raspberrypi.com/documentation/)
